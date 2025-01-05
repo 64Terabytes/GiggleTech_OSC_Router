@@ -3,8 +3,8 @@
     by Sideways
     Based on OSC Async Library: https://github.com/Frando/async-osc
 
-    This is the main entry point for the GiggleTech OSC router, responsible for receiving and 
-    processing Open Sound Control (OSC) messages, managing devices, and adjusting device parameters 
+    This is the main entry point for the GiggleTech OSC router, responsible for receiving and
+    processing Open Sound Control (OSC) messages, managing devices, and adjusting device parameters
     such as motor speeds and proximity-based triggers.
 
     **Key Features:**
@@ -12,13 +12,13 @@
     1. **Configuration Loading (`config::load_config`)**:
        - Loads global and device-specific configurations from the `config.yml` file.
        - Initializes device parameters such as max speed, proximity settings, and velocity control.
-       
+
     2. **Socket Setup (`giggletech_osc::setup_rx_socket`)**:
        - Sets up the OSC receiver (Rx) socket to listen for incoming OSC messages from devices.
        - Each device's URI and OSC-related settings are configured, allowing the system to communicate properly.
 
     3. **Timeout Management (`osc_timeout`)**:
-       - Each device has a timeout mechanism. If no OSC signal is received within the configured timeout period, 
+       - Each device has a timeout mechanism. If no OSC signal is received within the configured timeout period,
          the device will stop sending motor control signals.
        - Timeouts are handled concurrently for each device using `task::spawn` to run asynchronously.
 
@@ -47,21 +47,25 @@
 */
 
 use async_osc::{prelude::*, OscPacket, OscType, Result};
-use async_std::{stream::StreamExt, task::{self}, sync::Arc};
-use std::sync::atomic::{AtomicBool};
+use async_std::{
+    stream::StreamExt,
+    sync::Arc,
+    task::{self},
+};
+use chrono::Local; // For getting the local time
+use eframe::egui;
 use std::fs::OpenOptions;
 use std::io::{self, Write}; // For file logging and keeping the console open
-use chrono::Local; // For getting the local time
-use eframe::egui; // For GUI elements
+use std::sync::atomic::AtomicBool; // For GUI elements
 
 use crate::osc_timeout::osc_timeout;
-mod data_processing;
 mod config;
+mod data_processing;
 mod giggletech_osc;
-mod terminator;
-mod osc_timeout;
 mod handle_proximity_parameter;
+mod osc_timeout;
 mod stop_pats;
+mod terminator;
 
 // Function to log messages to a file with a timestamp
 fn log_to_file(message: &str) {
@@ -121,26 +125,40 @@ async fn run_giggletech() -> async_osc::Result<()> {
         let headpat_device_ip_clone = device.device_uri.clone();
         task::spawn(async move {
             if let Err(e) = osc_timeout(&headpat_device_ip_clone, timeout).await {
-                let error_message = format!("Timeout error for device {}: {}", headpat_device_ip_clone, e);
+                let error_message = format!(
+                    "Timeout error for device {}: {}",
+                    headpat_device_ip_clone, e
+                );
                 log_to_file(&error_message);
             }
         });
     }
 
-
-
-
-
+    // UI
     log_to_file("Starting GUI");
 
-    let native_options = eframe::NativeOptions::default();
-    eframe::run_native("Giggletech OSC Router", native_options, Box::new(|cc| Ok(Box::new(GiggleTechUI::new(cc)))));
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([400.0, 300.0])
+            .with_min_inner_size([300.0, 220.0])
+            .with_icon(
+                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-256.png")[..])
+                .expect("Failed to load icon"),
+            ),
+        ..Default::default()
+    }; //::default();
+
+    eframe::run_native(
+        "Giggletech OSC Router",
+        native_options,
+        Box::new(|cc| Ok(Box::new(GiggleTechUI::new(cc)))),
+    );
 
     #[derive(Default)]
     struct GiggleTechUI {}
 
     impl GiggleTechUI {
-        fn new (cc: &eframe::CreationContext<'_>) -> Self {
+        fn new(cc: &eframe::CreationContext<'_>) -> Self {
             Self::default()
         }
     }
@@ -152,12 +170,6 @@ async fn run_giggletech() -> async_osc::Result<()> {
             });
         }
     }
-
-
-
-
-
-
 
     log_to_file("Listening for OSC Packets...");
 
@@ -198,8 +210,9 @@ async fn run_giggletech() -> async_osc::Result<()> {
                         handle_proximity_parameter::handle_proximity_parameter(
                             running.clone(), // Terminator
                             value,
-                            device.clone()
-                        ).await?;
+                            device.clone(),
+                        )
+                        .await?;
                         //let log_message = format!("Processed proximity parameter for device: {}", device.device_uri);
                         //log_to_file(&log_message);
                     }
