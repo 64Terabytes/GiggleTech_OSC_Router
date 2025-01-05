@@ -34,9 +34,7 @@ async-h1 = "2.3.4"
 tide = "0.16"
 chrono = "0.4"
 egui = "0.30" # Libraies for handling GUI's
-eframe = { version = "0.30", default-features = false, features = [
-    "default_fonts",
-]}
+eframe = { version = "0.30", default-features = true }
 
 
 

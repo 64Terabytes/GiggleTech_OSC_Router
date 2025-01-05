@@ -52,6 +52,7 @@ use std::sync::atomic::{AtomicBool};
 use std::fs::OpenOptions;
 use std::io::{self, Write}; // For file logging and keeping the console open
 use chrono::Local; // For getting the local time
+use eframe::egui; // For GUI elements
 
 use crate::osc_timeout::osc_timeout;
 mod data_processing;
@@ -125,6 +126,38 @@ async fn run_giggletech() -> async_osc::Result<()> {
             }
         });
     }
+
+
+
+
+
+    log_to_file("Starting GUI");
+
+    let native_options = eframe::NativeOptions::default();
+    eframe::run_native("Giggletech OSC Router", native_options, Box::new(|cc| Ok(Box::new(GiggleTechUI::new(cc)))));
+
+    #[derive(Default)]
+    struct GiggleTechUI {}
+
+    impl GiggleTechUI {
+        fn new (cc: &eframe::CreationContext<'_>) -> Self {
+            Self::default()
+        }
+    }
+
+    impl eframe::App for GiggleTechUI {
+        fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                ui.heading("Hello GiggleTech!");
+            });
+        }
+    }
+
+
+
+
+
+
 
     log_to_file("Listening for OSC Packets...");
 
