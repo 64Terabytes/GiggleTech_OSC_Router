@@ -53,10 +53,11 @@ use async_std::{
     task::{self},
 };
 use chrono::Local; // For getting the local time
-use eframe::egui;
+use eframe::egui; // For GUI elements
+use futures::io::Close;
 use std::fs::OpenOptions;
 use std::io::{self, Write}; // For file logging and keeping the console open
-use std::sync::atomic::AtomicBool; // For GUI elements
+use std::sync::atomic::AtomicBool;
 
 use crate::osc_timeout::osc_timeout;
 mod config;
@@ -134,6 +135,13 @@ async fn run_giggletech() -> async_osc::Result<()> {
         });
     }
 
+
+
+
+
+
+
+
     // UI
     log_to_file("Starting GUI");
 
@@ -146,7 +154,7 @@ async fn run_giggletech() -> async_osc::Result<()> {
                 .expect("Failed to load icon"),
             ),
         ..Default::default()
-    }; //::default();
+    };
 
     eframe::run_native(
         "Giggletech OSC Router",
@@ -155,7 +163,9 @@ async fn run_giggletech() -> async_osc::Result<()> {
     );
 
     #[derive(Default)]
-    struct GiggleTechUI {}
+    struct GiggleTechUI {
+        x_clicked: bool,
+    }
 
     impl GiggleTechUI {
         fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -163,19 +173,56 @@ async fn run_giggletech() -> async_osc::Result<()> {
         }
     }
 
+
+
     impl eframe::App for GiggleTechUI {
-        fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+
+            let mut x_clicked = false;
+
+            egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+                egui::menu::bar(ui, |ui| {
+                    ui.menu_button("Quit", |ui| {
+                        x_clicked = true;
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);  
+                    });    
+                    
+                    egui::widgets::global_theme_preference_switch(ui);
+
+                })
+            });
+
+
+
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.heading("Hello GiggleTech!");
             });
         }
     }
 
+
+
+
+
+
+
+
     log_to_file("Listening for OSC Packets...");
 
     // Listen for OSC Packets
     while let Some(packet) = rx_socket.next().await {
         let (packet, _peer_addr) = packet?;
+
+
+
+        if x_clicked == true {
+            break;
+        }
+
+
+
+
+
 
         // Filter OSC Signals
         match packet {
