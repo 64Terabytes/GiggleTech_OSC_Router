@@ -178,19 +178,19 @@ async fn run_giggletech() -> async_osc::Result<()> {
     impl eframe::App for GiggleTechUI {
         fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 
-            let mut x_clicked = false;
+            // let mut x_clicked = false;
 
-            egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-                egui::menu::bar(ui, |ui| {
-                    ui.menu_button("Quit", |ui| {
-                        x_clicked = true;
-                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);  
-                    });    
+            // egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            //     egui::menu::bar(ui, |ui| {
+            //         ui.menu_button("Quit", |ui| {
+            //             x_clicked = true;
+            //             ctx.send_viewport_cmd(egui::ViewportCommand::Close);  
+            //         });    
                     
-                    egui::widgets::global_theme_preference_switch(ui);
+            //         egui::widgets::global_theme_preference_switch(ui);
 
-                })
-            });
+            //     })
+            // });
 
 
 
@@ -215,9 +215,9 @@ async fn run_giggletech() -> async_osc::Result<()> {
 
 
 
-        if x_clicked == true {
-            break;
-        }
+        // if x_clicked == true {
+        //     break;
+        // }
 
 
 
